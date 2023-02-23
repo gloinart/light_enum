@@ -7,7 +7,7 @@ struct enum_data_t {
 	std::vector<light_enum::detail::generic_int_t> values_{};
 	std::vector<std::string> names_{};
 	std::vector<light_enum::detail::byte_t> blob_{};
-	size_t size_{};
+	size_t enum_bytesize_{};
 };
 
 
@@ -19,11 +19,11 @@ using database_t = map_t<
 	enum_data_t
 >;
 
-auto& get_database_mut() {
+[[nodiscard]] auto& get_database_mut() {
 	static auto s_database = database_t{};
 	return s_database;
 }
-const auto& get_database() {
+[[nodiscard]] const auto& get_database() {
 	return std::as_const(get_database_mut());
 }
 
@@ -85,7 +85,6 @@ auto light_enum::detail::registry::get_blob(
 	return enum_data.blob_;
 }
 
-
 auto light_enum::detail::registry::enum_names(
 	const std::type_index& ti
 ) -> const std::vector<std::string>& {
@@ -98,11 +97,9 @@ auto light_enum::detail::registry::enum_name(
 	const detail::generic_int_t value
 ) -> std::string_view {
 	const auto& enum_data = get_enum_data(ti);
-	const auto& values = enum_data.values_;
-	const auto& names = enum_data.names_;
-	for (size_t i = 0; i < values.size(); ++i) {
-		if (values[i] == value) {
-			return std::string_view{ names[i] };
+	for (size_t i = 0; i < enum_data.values_.size(); ++i) {
+		if (enum_data.values_[i] == value) {
+			return std::string_view{ enum_data.names_[i] };
 		}
 	}
 	return {};
@@ -110,7 +107,7 @@ auto light_enum::detail::registry::enum_name(
 
 auto light_enum::detail::registry::register_enum(
 	const std::type_index& ti, 
-	size_t size, 
+	size_t enum_bytesize,
 	std::vector<detail::byte_t> blob,
 	std::vector<detail::generic_int_t> values,
 	std::vector<std::string> names
@@ -119,7 +116,7 @@ auto light_enum::detail::registry::register_enum(
 		std::move(values),
 		std::move(names),
 		std::move(blob),
-		size
+		enum_bytesize
 	};
 	get_database_mut().emplace(
 		ti, 

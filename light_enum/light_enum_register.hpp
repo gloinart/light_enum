@@ -24,6 +24,10 @@ namespace light_enum {
 
 template <typename E>
 auto register_enum() -> void {
+	const auto type_index = std::type_index{ typeid(E) };
+	if (detail::registry::is_registered(type_index)) {
+		return;
+	}
 	const auto values = magic_enum::enum_values<E>();
 	const auto enum_size = sizeof(E);
 	const auto num_elements = values.size();
@@ -40,9 +44,8 @@ auto register_enum() -> void {
 	auto values_int = std::vector<detail::generic_int_t>{};
 	values_int.reserve(num_elements);
 	for (const auto& e : values) {
-		values_int.push_back(static_cast<detail::generic_int_t>(e));
+		values_int.emplace_back(static_cast<detail::generic_int_t>(e));
 	}
-	const auto type_index = std::type_index{ typeid(E) };
 	auto names = std::vector<std::string>{};
 	names.reserve(num_elements);
 	for (const auto& name : magic_enum::enum_names<E>()) {
