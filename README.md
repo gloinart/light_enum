@@ -2,6 +2,9 @@
 Light-Enum is an "add-on" for Magic-Enum aiming to reduce compile times.
 The idea is to introspect enums (using Magic Enum) at application start and store them all in a hash map, introspection of enums is then performed by looking up enums in the hash map.
 This means that the heavey Magic Enum introspection only needs to be compiled in a single translation unit/cpp file rather than every time an enum is introspected.
+
+### Magic-Enum
+As mentioned, this just a simple add-on for Magic Enum. All the hard work for introspecting enums shall be credited to the creator of Magic Enum.
 <em>[Magic Enum](https://github.com/Neargye/magic_enum)</em>
 
 ### Summary
@@ -13,8 +16,6 @@ The interface for light_enum is similar to magic_enum. The difference is that in
 
 ### Run-time performance
 Every introspection constructs a std::type_index and performs a std::unordered_map lookup.
-
-
 
 ## Usage example
 
@@ -63,6 +64,7 @@ These improvements are planned for the future
 * Ability to change std::type_index to boost::typeindex in order to not require RTTI
 * Ability to change the underlying std::unordered_map to a faster hash-map (tsl::hopscotch_map for example)
 
+## License
 
 
 ## Contact
