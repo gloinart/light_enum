@@ -8,12 +8,13 @@
 
 TEST_CASE("enum_name") {
 	REQUIRE(light_enum::is_registred<Fruit>());
-	const auto dummy_fruit = static_cast<Fruit>(404);
 	REQUIRE(light_enum::enum_name(Fruit::Apple) == "Apple");
 	REQUIRE(light_enum::enum_name(Fruit::Orange) == "Orange");
 	REQUIRE(light_enum::enum_name(Fruit::Banana) == "Banana");
 	REQUIRE(light_enum::enum_name(Fruit::Grape) == "Grape");
-	REQUIRE(light_enum::enum_name(dummy_fruit) == "");
+	for (const auto& undefined_fruit : kundefined_fruits) {
+		REQUIRE(light_enum::enum_name(undefined_fruit) == "");
+	}
 }
 
 TEST_CASE("enum_cast") {
@@ -33,7 +34,12 @@ TEST_CASE("enum_count") {
 TEST_CASE("enum_values") {
 	REQUIRE(light_enum::is_registred<Fruit>());
 	const auto& values = light_enum::enum_values<Fruit>();
-	const auto facit = std::vector<Fruit>{ Fruit::Apple, Fruit::Orange, Fruit::Banana, Fruit::Grape };
+	const auto facit = std::vector<Fruit>{ 
+		Fruit::Apple, 
+		Fruit::Orange, 
+		Fruit::Banana, 
+		Fruit::Grape 
+	};
 	REQUIRE(values.size() == facit.size());
 	REQUIRE(std::equal(values.begin(), values.end(), facit.begin()));
 }
@@ -52,22 +58,24 @@ TEST_CASE("enum_names") {
 
 TEST_CASE("enum_contains") {
 	REQUIRE(light_enum::is_registred<Fruit>());
-	const auto dummy_fruit = static_cast<Fruit>(404);
 	REQUIRE(light_enum::enum_contains(Fruit::Apple) == true);
 	REQUIRE(light_enum::enum_contains(Fruit::Orange) == true);
 	REQUIRE(light_enum::enum_contains(Fruit::Banana) == true);
 	REQUIRE(light_enum::enum_contains(Fruit::Grape) == true);
-	REQUIRE(light_enum::enum_contains(dummy_fruit) == false);
+	for (const auto& undefined_fruit : kundefined_fruits) {
+		REQUIRE(light_enum::enum_contains(undefined_fruit) == false);
+	}
 }
 
 TEST_CASE("enum_index") {
 	REQUIRE(light_enum::is_registred<Fruit>());
-	const auto dummy_fruit = static_cast<Fruit>(404);
 	REQUIRE(light_enum::enum_index(Fruit::Apple) == 0);
 	REQUIRE(light_enum::enum_index(Fruit::Orange) == 1);
 	REQUIRE(light_enum::enum_index(Fruit::Banana) == 2);
 	REQUIRE(light_enum::enum_index(Fruit::Grape) == 3);
-	REQUIRE(light_enum::enum_index(dummy_fruit) == std::nullopt);
+	for (const auto& undefined_fruit : kundefined_fruits) {
+		REQUIRE(light_enum::enum_index(undefined_fruit) == std::nullopt);
+	}
 }
 
 
@@ -90,7 +98,8 @@ TEST_CASE("second enum") {
 
 TEST_CASE("unregistered enum") {
 	enum class UnregistredEnum {
-		A,B
+		A,
+		B
 	};
 	REQUIRE(!light_enum::is_registred<UnregistredEnum>());
 	REQUIRE_THROWS(light_enum::enum_count<UnregistredEnum>());
@@ -99,6 +108,6 @@ TEST_CASE("unregistered enum") {
 TEST_CASE("enum class:bool") {
 	REQUIRE(light_enum::is_registred<Eatable>());
 	REQUIRE(light_enum::enum_count<Eatable>() == 2);
-	REQUIRE(light_enum::enum_name(Eatable::Yes) == "Yes");
 	REQUIRE(light_enum::enum_name(Eatable::No) == "No");
+	REQUIRE(light_enum::enum_name(Eatable::Yes) == "Yes");
 }
