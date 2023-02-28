@@ -8,8 +8,8 @@
 
 // Type definitions
 namespace light_enum::detail {
-using underlying_int_t = int32_t;
-using byte_t = uint8_t;
+using underlying_int_t = int16_t;
+using byte_t = std::byte;
 template <typename T> class span;
 }
 
@@ -51,22 +51,22 @@ public:
 	using const_pointer = const value_type*;
 	using reference = value_type&;
 	using const_reference = const value_type&;
-	constexpr span(const T* first, const T* last) noexcept
+	constexpr span(const_pointer first, const_pointer last) noexcept
 	: first_{ first }, last_{ last } {}
 	[[nodiscard]] constexpr auto begin() const noexcept { return first_; }
 	[[nodiscard]] constexpr auto end() const noexcept { return last_; }
 	[[nodiscard]] constexpr auto size() const noexcept { return last_ - first_;}
 	[[nodiscard]] constexpr auto empty() const noexcept { return first_ == last_ ;}
 	[[nodiscard]] constexpr auto& operator[](size_t idx) const noexcept { return *(first_ + idx);}
-	[[nodiscard]] auto& at(size_t idx) const {
+	[[nodiscard]] auto at(size_t idx) const -> const_reference {
 		if (idx >= size()) {
 			throw std::out_of_range{ "out of range" };
 		}
 		return *(first_ + idx);
 	}
 private:
-	const T* first_{nullptr};
-	const T* last_{nullptr};
+	const_pointer first_{nullptr};
+	const_pointer last_{nullptr};
 };
 }
 
@@ -136,10 +136,9 @@ auto enum_contains(const E& e) -> bool {
 
 template <typename E>
 auto enum_index(const E& e) -> std::optional<size_t> {
-	const auto type_index = std::type_index{ typeid(E) };
+	const auto type_index = std::type_index{typeid(E)};
 	return detail::registry::enum_index(type_index, static_cast<detail::underlying_int_t>(e));
 }
-
 
 template <typename E> 
 auto enum_cast(const std::string_view& name) -> std::optional<E> {
@@ -152,9 +151,8 @@ auto enum_cast(const std::string_view& name) -> std::optional<E> {
 
 template <typename E> 
 auto is_registred() -> bool {
-	const auto type_index = std::type_index{ typeid(E) };
+	const auto type_index = std::type_index{typeid(E)};
 	return detail::registry::is_registered(type_index);
 }
-
 
 }

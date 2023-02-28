@@ -2,6 +2,15 @@
 #include <unordered_map>
 #include <algorithm>
 
+#ifndef LIGHT_ENUM_ASSERT
+	#ifdef NDEBUG
+		#define LIGHT_ENUM_ASSERT(x)
+	#else
+		#include <cassert>
+		#define LIGHT_ENUM_ASSERT(x) assert(x)
+	#endif
+#endif
+
 #if __cplusplus >= 202002L
 	#define LIGHT_ENUM_LIKELY [[likely]]
 	#define LIGHT_ENUM_UNLIKELY [[unlikely]]
@@ -9,7 +18,6 @@
 	#define LIGHT_ENUM_LIKELY
 	#define LIGHT_ENUM_UNLIKELY
 #endif
-
 
 
 
@@ -72,38 +80,56 @@ auto light_enum::detail::registry::enum_cast(
 	const std::string_view& name
 ) -> std::optional<detail::underlying_int_t> {
 	const auto& enum_data = get_enum_data(ti);
-	for (size_t i = 0, i_end = enum_data.names_.size(); i < i_end; ++i) {
-		if (enum_data.names_[i] == name) LIGHT_ENUM_UNLIKELY {
-			return enum_data.values_[i];
-		}
+	const auto it = std::find(
+		enum_data.names_.begin(),
+		enum_data.names_.end(),
+		name
+	);
+	if (it == enum_data.names_.end()) LIGHT_ENUM_UNLIKELY {
+		return std::nullopt;
 	}
-	return std::nullopt;
+	const auto idx = static_cast<size_t>(it - enum_data.names_.begin());
+	LIGHT_ENUM_ASSERT(idx < enum_data.values_.size());
+	return enum_data.values_[idx];
 }
 
 auto light_enum::detail::registry::enum_contains(
-	const std::type_index& ti, 
-	detail::underlying_int_t v
+	const std::type_index& ti,
+	const detail::underlying_int_t value
 ) -> bool {
-	const auto& enum_data = get_enum_data(ti);
-	for (const auto& candidate : enum_data.values_) {
-		if (candidate == v) {
-			return true;
-		}
-	}
-	return false;
+	const auto& values = get_enum_data(ti).values_;
+	// Note that values are ordered
+	const auto it = std::find_if(
+		values.begin(),
+		values.end(),
+		[&value](const auto& candidate) noexcept { return candidate >= value; }
+	);
+	return
+		it == values.end() ? false :
+		*it == value ? true :
+		false;
 }
 
 auto light_enum::detail::registry::enum_index(
 	const std::type_index& ti,
-	detail::underlying_int_t v
+	const detail::underlying_int_t value
 ) -> std::optional<size_t> {
-	const auto& enum_data = get_enum_data(ti);
-	for (size_t i = 0, i_end = enum_data.values_.size(); i < i_end; ++i) {
-		if (enum_data.values_[i] == v) {
-			return i;
-		}
-	}
-	return std::nullopt;
+	const auto& values = get_enum_data(ti).values_;
+	// Note that values are ordered
+	const auto it = std::find_if(
+		values.begin(),
+		values.end(),
+		[&value](const auto& candidate) noexcept { return candidate >= value; }
+	);
+	const auto idx =
+		it == values.end() ? std::optional<size_t>{} :
+		*it != value ? std::optional<size_t>{} :
+		static_cast<size_t>(it - values.begin());
+	LIGHT_ENUM_ASSERT(
+		idx == std::nullopt ||
+		idx.value() < values.size()
+	);
+	return idx;
 }
 
 auto light_enum::detail::registry::enum_count(const std::type_index& ti) -> size_t {
@@ -137,12 +163,24 @@ auto light_enum::detail::registry::enum_name(
 	const detail::underlying_int_t value
 ) -> std::string_view {
 	const auto& enum_data = get_enum_data(ti);
-	for (size_t i = 0, i_end = enum_data.values_.size(); i < i_end; ++i) {
-		if (enum_data.values_[i] == value) LIGHT_ENUM_UNLIKELY {
-			return std::string_view{ enum_data.names_[i] };
-		}
+	const auto& values = enum_data.values_;
+	// Note that values are ordered
+	const auto it = std::find_if(
+		values.begin(),
+		values.end(),
+		[&value](const auto& candidate) noexcept { return candidate >= value; }
+	);
+	const auto value_found =
+		it == values.end() ? false :
+		*it != value ? false :
+		true;
+	if(!value_found) LIGHT_ENUM_UNLIKELY {
+		return {};
 	}
-	return {};
+	const auto idx = static_cast<size_t>(it - values.begin());
+	LIGHT_ENUM_ASSERT(idx < values.size());
+	LIGHT_ENUM_ASSERT(idx < enum_data.names_.size());
+	return enum_data.names_[idx];
 }
 
 
