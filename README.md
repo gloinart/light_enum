@@ -68,7 +68,7 @@ Application.cpp
 auto function() {
 	// Introspect enums just as Magic Enum
 	const auto apple = Fruit::Apple;
-	assert(light_enum::enum_count<Fruit> == 3);
+	assert(light_enum::enum_count<Fruit>() == 3);
 	assert(light_enum::enum_name(apple) == "Apple");
 	const auto values = light_enum::enum_values<Fruit>();
 	assert(values[0] == Fruit::Apple);
