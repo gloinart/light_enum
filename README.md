@@ -36,13 +36,6 @@ template <typename E> auto register_enum() -> void;
 LIGHT_ENUM_REGISTER(E) // Convenience macro for putting in global namespace 
 ```
 
-### Run-time performance
-Every introspection 
-	* Constructs a std::type_index 
-	* Reads a static variable
-	* Performs a std::unordered_map lookup
-RTTI is required to be enabled in order to use std::type_index. Future updates will be able to use boost::type_index which does not depend on RTTI.
-
 
 ## Usage example
 
@@ -81,7 +74,26 @@ auto function() {
 
 
 
+## Run-time performance
+Every introspection 
+	* Constructs a std::type_index 
+	* Reads a static variable
+	* Performs a std::unordered_map lookup
+RTTI is required to be enabled in order to use std::type_index. Future updates will be able to use boost::type_index which does not depend on RTTI.
+#### Best of both worlds
+If you want low compile time in development builds and full performance in release builds you could toggle namespace depending on build flags.
+Simple example:
+```cpp
+#ifdef RELEASE_BUILD
+	namespace my_enum = magic_enum;
+#else
+	namespace my_enum = light_enum;
+#endif
+auto function() -> void {
+	auto num_fruits = my_enum::enum_count<Fruit>();
+}
 
+```
 
 ## Installation
 Light-Enum consists of a single .cpp file which needs to be added to the project.
