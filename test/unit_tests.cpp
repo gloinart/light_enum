@@ -53,7 +53,8 @@ TEST_CASE("enum_names") {
 		"Grape"
 	};
 	const auto& names = light_enum::enum_names<Fruit>();
-	REQUIRE(names == facit);
+	REQUIRE(names.size() == facit.size());
+	REQUIRE(std::equal(names.begin(), names.end(), facit.begin()));
 }
 
 TEST_CASE("enum_contains") {

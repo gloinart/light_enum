@@ -1,6 +1,7 @@
 #include "light_enum.hpp"
 #include <unordered_map>
 #include <algorithm>
+#include <memory>
 
 #ifndef LIGHT_ENUM_ASSERT
 	#ifdef NDEBUG
@@ -28,7 +29,8 @@ namespace {
 struct enum_data_t {
 	std::string name_{};
 	std::vector<light_enum::detail::underlying_int_t> values_{};
-	std::vector<std::string> names_{};
+	std::unique_ptr<std::vector<std::string>> names_as_strings_{}; // Needs to stay fixed in memory even if map moves objects around
+	std::vector<std::string_view> names_as_string_views_{}; // Points to names_as_strings_
 	std::vector<light_enum::detail::byte_t> blob_{};
 	size_t enum_bytesize_{};
 	bool is_signed_{};
@@ -80,15 +82,17 @@ auto light_enum::detail::registry::enum_cast(
 	const std::string_view& name
 ) -> std::optional<detail::underlying_int_t> {
 	const auto& enum_data = get_enum_data(ti);
+	LIGHT_ENUM_ASSERT(enum_data.names_as_strings_ != nullptr);
+	const auto& names = *enum_data.names_as_strings_;
 	const auto it = std::find(
-		enum_data.names_.begin(),
-		enum_data.names_.end(),
+		names.begin(),
+		names.end(),
 		name
 	);
-	if (it == enum_data.names_.end()) LIGHT_ENUM_UNLIKELY {
+	if (it == names.end()) LIGHT_ENUM_UNLIKELY {
 		return std::nullopt;
 	}
-	const auto idx = static_cast<size_t>(it - enum_data.names_.begin());
+	const auto idx = static_cast<size_t>(it - names.begin());
 	LIGHT_ENUM_ASSERT(idx < enum_data.values_.size());
 	return enum_data.values_[idx];
 }
@@ -153,9 +157,13 @@ auto light_enum::detail::registry::get_blob(
 
 auto light_enum::detail::registry::enum_names(
 	const std::type_index& ti
-) -> const std::vector<std::string>& {
+) -> detail::span<std::string_view> {
 	const auto& enum_data = get_enum_data(ti);
-	return enum_data.names_;
+	const auto& svs = enum_data.names_as_string_views_;
+	return detail::span<std::string_view>{
+		svs.data(),
+		svs.data() + svs.size()
+	};
 }
 
 auto light_enum::detail::registry::enum_name(
@@ -175,12 +183,16 @@ auto light_enum::detail::registry::enum_name(
 		*it != value ? false :
 		true;
 	if(!value_found) LIGHT_ENUM_UNLIKELY {
-		return {};
+		return std::string_view{};
 	}
 	const auto idx = static_cast<size_t>(it - values.begin());
 	LIGHT_ENUM_ASSERT(idx < values.size());
-	LIGHT_ENUM_ASSERT(idx < enum_data.names_.size());
-	return enum_data.names_[idx];
+	LIGHT_ENUM_ASSERT(idx < enum_data.names_as_string_views_.size());
+	LIGHT_ENUM_ASSERT(
+		enum_data.names_as_string_views_[idx] == 
+		enum_data.names_as_strings_->at(idx)
+	);
+	return enum_data.names_as_string_views_[idx];
 }
 
 
@@ -210,10 +222,21 @@ auto light_enum::detail::registry::register_enum(
 		auto msg = std::string{"enum error: "} + ti.name();
 		throw std::logic_error{ msg };
 	}
+	// Using a unique_ptr to force the vector to stay fixed in memory
+	// as string_views are pointers to them.
+	auto names_as_strings_uptr = std::make_unique<std::vector<std::string>>(
+		std::move(names)
+	);
+	auto names_svs = std::vector<std::string_view>{};
+	names_svs.reserve(names_as_strings_uptr->size());
+	for (const auto& name : *names_as_strings_uptr) {
+		names_svs.emplace_back(name);
+	}
 	auto enum_data = enum_data_t{
 		ti.name(),
 		std::move(values),
-		std::move(names),
+		std::move(names_as_strings_uptr),
+		std::move(names_svs),
 		std::move(blob),
 		enum_bytesize,
 		is_signed
