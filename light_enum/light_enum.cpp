@@ -227,16 +227,16 @@ auto light_enum::detail::registry::register_enum(
 	auto names_as_strings_uptr = std::make_unique<std::vector<std::string>>(
 		std::move(names)
 	);
-	auto names_svs = std::vector<std::string_view>{};
-	names_svs.reserve(names_as_strings_uptr->size());
+	auto names_as_string_views = std::vector<std::string_view>{};
+	names_as_string_views.reserve(names_as_strings_uptr->size());
 	for (const auto& name : *names_as_strings_uptr) {
-		names_svs.emplace_back(name);
+		names_as_string_views.emplace_back(name);
 	}
 	auto enum_data = enum_data_t{
 		ti.name(),
 		std::move(values),
 		std::move(names_as_strings_uptr),
-		std::move(names_svs),
+		std::move(names_as_string_views),
 		std::move(blob),
 		enum_bytesize,
 		is_signed
