@@ -79,6 +79,15 @@ TEST_CASE("enum_index") {
 	}
 }
 
+TEST_CASE("type abbreviations") {
+	REQUIRE(light_enum::is_registred<Fruit>());
+	REQUIRE(light_enum::is_registred<Fruit&>());
+	REQUIRE(light_enum::is_registred<Fruit&&>());
+	REQUIRE(light_enum::is_registred<const Fruit>());
+	REQUIRE(light_enum::is_registred<const Fruit&>());
+	REQUIRE(!light_enum::is_registred<Fruit*>());
+	REQUIRE(!light_enum::is_registred<const Fruit*>());
+}
 
 
 TEST_CASE("enum in other namespaces namespace") {
