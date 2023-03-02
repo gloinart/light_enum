@@ -84,7 +84,7 @@ auto enum_names() -> detail::span<std::string_view> {
 }
 
 template <typename E>
- auto enum_name(const E& e) -> std::string_view {
+auto enum_name(const E& e) -> std::string_view {
 	const auto type_index = std::type_index{typeid(E)};
 	const auto underlying_int = static_cast<detail::underlying_int_t>(e);
 	return detail::registry::enum_name(type_index, underlying_int);
