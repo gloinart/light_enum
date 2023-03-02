@@ -17,12 +17,12 @@ As mentioned, this just a simple add-on for Magic Enum. All the hard work for in
 ### Interface
 
 #### Introspecting enums
-All these are similar to the corresponding function in magic_enum, however a span or a std::vector& is returned instead of an array.
+All these functions are similar to the corresponding function in magic_enum, but a span is returned instead of a std::array.
 Trying to access an enum not registred throws an out_of_bounds exception.
 ```cpp
 template <typename E> auto enum_cast(const std::string_view& name) -> std::optional<E>;
 template <typename E> auto enum_values() -> detail::span<E>;
-template <typename E> auto enum_names() -> const std::vector<std::string>&;
+template <typename E> auto enum_names() -> detail::span<std::string_view>;
 template <typename E> auto enum_name(const E& e) -> std::string_view; // Returns an empty string_view if invalid enum
 template <typename E> auto enum_count() -> size_t;
 template <typename E> auto enum_index(const E& e) -> std::optional<size_t>;
