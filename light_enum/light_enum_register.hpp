@@ -39,6 +39,7 @@ namespace light_enum {
 
 template <typename E>
 auto register_enum() -> void {
+	static_assert(std::is_enum_v<E>);
 	const auto type_index = std::type_index{ typeid(E) };
 	if (detail::registry::is_registered(type_index)) {
 		return;
