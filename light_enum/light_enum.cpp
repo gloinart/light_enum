@@ -82,8 +82,7 @@ auto light_enum::detail::registry::enum_cast(
 	const std::string_view& name
 ) -> std::optional<detail::underlying_int_t> {
 	const auto& enum_data = get_enum_data(ti);
-	LIGHT_ENUM_ASSERT(enum_data.names_as_strings_ != nullptr);
-	const auto& names = *enum_data.names_as_strings_;
+	const auto& names = enum_data.names_as_string_views_;
 	const auto it = std::find(
 		names.begin(),
 		names.end(),
