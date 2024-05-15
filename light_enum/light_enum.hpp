@@ -6,16 +6,6 @@
 #include <optional>
 
 
-/*
-
-
-
-
-
-*/
-
-
-
 
 // Introspecting enums directly
 namespace light_enum {
