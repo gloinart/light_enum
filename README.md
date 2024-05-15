@@ -27,6 +27,8 @@ template <typename E> auto enum_name(const E& e) -> std::string_view; // Returns
 template <typename E> auto enum_count() -> size_t;
 template <typename E> auto enum_index(const E& e) -> std::optional<size_t>;
 template <typename E> auto enum_contains(const E& e) -> bool;
+template <typename E> auto enum_next() -> E; // Returns the next enum
+template <typename E> auto enum_prev() -> E; // Returns the previous enum
 ```
 
 #### Adding enums to registry
@@ -50,7 +52,15 @@ Fruit.cpp
 // Only include light_enum_register.hpp where you register enums
 #include "Fruit.h"
 #include "light_enum/light_enum_register.hpp"
+
 LIGHT_ENUM_REGISTER(Fruit);
+
+// ...or ...
+
+LIGHT_ENUM_REGISTER_RANGE(Fruit, 0, 200); 
+// If you have a large enum you can define the range to search for values like this.
+// Note that the range can be larger than the values of the enum
+
 ```
 
 Application.cpp
@@ -73,31 +83,47 @@ auto function() {
 
 
 
+## Features
+
+## Stable memory
+All returned spans and string_views are guaranteed to be stable in memory, even if new enums are registered. 
+Therefore, it's perfectly store them locally for faster access.
+#### Example:
+```cpp
+struct FruitInfo{
+	Fruit fruit;
+	std::string_view name;
+};
+auto fruit_info = FruitInfo {
+	EFruit::Apple,
+	light_enum::enum_name(EFruit::Apple);
+};
+// fruit_info.name will always be valid
+
+struct FruitBasket{
+	span<std::string_view> names;
+	span<Fruit> fruits;
+};
+auto fruit_basket = FruitBasket{
+	light_enum::enum_names<Fruit>(),
+	light_enum::enum_values<Fruit>()
+};
+// fruit_basket.names and fruit_basket.fruits will always be valid
+```
+
 
 ## Run-time performance
 Every introspection 
 	* Constructs a std::type_index 
-	* Reads a static variable
+	* Reads a static variable holding the database
 	* Performs a std::unordered_map lookup
 RTTI is required to be enabled in order to use std::type_index. Future updates will be able to use boost::type_index which does not depend on RTTI.
-#### Best of both worlds
-If you want low compile time in development builds and full performance in release builds you could toggle namespace depending on build flags.
-Simple example:
-```cpp
-#ifdef RELEASE_BUILD
-	namespace my_enum = magic_enum;
-#else
-	namespace my_enum = light_enum;
-#endif
-auto function() -> void {
-	auto num_fruits = my_enum::enum_count<Fruit>();
-}
-
-```
 
 ## Installation
-Light-Enum consists of a single .cpp file which needs to be added to the project.
-As mentioned earlier, only include "light_enum_register.hpp" in the .cpp files where you register enums.
+Light enum is almost header-only for easy installation.
+- Include light_enum_impl.ipp once in a .cpp file of your choice.
+- Include light_enum.hpp wherever you want to access enums (I recommend you to put this in you precompiled header file)
+- Include "light_enum_register.hpp" in the .cpp files where you register enums, as registering enums is slow from a compile time perspective.
 
 ## Future improvements
 These improvements are planned for the future
@@ -109,4 +135,4 @@ MIT License.
 Use however you like, if you're using it in something released I would be happy for a mail telling me about it :)
 
 ## Contact
-I'm available at viktor.sehr(at)gmail.com
+I'm available at viktor dot sehr (at) gmail dot com
